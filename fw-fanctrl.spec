@@ -21,11 +21,8 @@ BuildRequires:  python3-devel
 BuildRequires:  python3-pip
 BuildRequires:  python3dist(setuptools)
 BuildRequires:  python3dist(wheel)
-BuildRequires:  python3dist(build)
 Requires:       python3
 Requires:       fw-ectool
-
-Patch0:         138-no-build.patch
 
 %description
 Framework Fan control script
@@ -37,16 +34,20 @@ Framework Fan control script
 %pyproject_wheel
 
 %install
+# Install Python package first
+%pyproject_install
+
+# Use upstream install.sh to install systemd services and configs
+# --no-pip-install: we already installed via pyproject_install
+# --effective-installation-dir: where the binary actually is
 ./install.sh --no-sudo \
     --no-ectool \
     --no-pip-install \
-    --no-pip-build \
     --no-post-install \
     --effective-installation-dir %{_bindir} \
     --dest-dir %{buildroot} \
     --prefix-dir /usr \
     --sysconf-dir /etc
-%pyproject_install
 
 %post
 %systemd_post %{name}.service

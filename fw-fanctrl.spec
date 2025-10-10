@@ -43,8 +43,9 @@ Framework Fan control script
     --no-ectool \
     --no-pip-install \
     --no-post-install \
-    -p %{buildroot}/usr \
-    --sysconf-dir %{buildroot}/etc
+    --dest-dir %{buildroot} \
+    --prefix-dir /usr \
+    --sysconf-dir /etc
 
 %post
 %systemd_post %{name}.service

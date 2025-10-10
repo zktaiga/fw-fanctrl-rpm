@@ -26,3 +26,15 @@ sudo rpm-ostree install fw-fanctrl
 ```
 
 This will install `fw-fanctrl` along with its dependency `fw-ectool`.
+
+**After installation, you must manually enable and start the service:**
+
+```bash
+sudo systemctl enable --now fw-fanctrl
+```
+
+To verify it's running:
+
+```bash
+sudo systemctl status fw-fanctrl
+```

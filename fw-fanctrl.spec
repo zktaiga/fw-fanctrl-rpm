@@ -42,9 +42,10 @@ Framework Fan control script
     --no-pip-install \
     --no-pip-build \
     --no-post-install \
-    --no-override-python-installation-path \
-    -p %{buildroot}/usr \
-    --sysconf-dir %{buildroot}/etc
+    --effective-installation-dir %{_bindir} \
+    --dest-dir %{buildroot} \
+    --prefix-dir /usr \
+    --sysconf-dir /etc
 %pyproject_install
 
 %post

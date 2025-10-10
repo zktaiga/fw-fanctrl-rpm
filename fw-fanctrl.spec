@@ -25,7 +25,7 @@ BuildRequires:  python3dist(build)
 Requires:       python3
 Requires:       fw-ectool
 
-Patch0:         138-no-build.patch
+Patch0:         rpm-packaging.patch
 
 %description
 Framework Fan control script

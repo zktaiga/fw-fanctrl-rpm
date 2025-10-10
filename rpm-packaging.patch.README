@@ -1,0 +1,32 @@
+# RPM Packaging Patch
+
+This patch adds the `--no-pip-build` flag to fw-fanctrl's install.sh script.
+
+## Why This Patch is Necessary
+
+RPM packaging follows a two-phase build process:
+1. **%build section**: Compile/build the software
+2. **%install section**: Install files to buildroot
+
+The upstream install.sh script expects to handle both building AND installing the Python package in one step. This conflicts with RPM's separation of concerns.
+
+## What the Patch Does
+
+Adds a `--no-pip-build` flag that:
+- Skips running `python3 -m build` during install.sh
+- Still allows install.sh to handle systemd services and configuration files
+- Lets RPM's %pyproject_wheel macro handle the Python package build in %build section
+- Lets RPM's %pyproject_install macro handle the Python package install in %install section
+
+## Is This Diverging From Upstream?
+
+No - this patch doesn't change fw-fanctrl's functionality at all. It only adapts the installation script to work properly with RPM packaging conventions. The actual fw-fanctrl code remains 100% upstream.
+
+## Alternative Considered
+
+We could skip install.sh entirely and manually install all systemd files/configs in the spec file, but:
+- That would duplicate logic from upstream
+- Harder to maintain when upstream adds new files
+- More likely to break on upstream updates
+
+This minimal patch allows us to leverage upstream's install logic while respecting RPM packaging standards.

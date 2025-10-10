@@ -21,6 +21,7 @@ BuildRequires:  python3-devel
 BuildRequires:  python3-pip
 BuildRequires:  python3dist(setuptools)
 BuildRequires:  python3dist(wheel)
+BuildRequires:  python3dist(build)
 Requires:       python3
 Requires:       fw-ectool
 

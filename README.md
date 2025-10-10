@@ -9,11 +9,20 @@ COPR for Framework Fan Control utilities.
 
 ## Installation
 
-You can install this by running the following snippet on a Fedora/CentOS based system:
+### Traditional Fedora/CentOS/RHEL
 
 ```bash
 sudo dnf copr enable zktaiga/fw-fanctrl
-sudo dnf install fw-fanctrl # if you just want ectool you can change this to fw-ectool
+sudo dnf install fw-fanctrl
 ```
 
-This should set you up with the required dependencies to get `fw-fanctrl` going, including `fw-ectool`.
+### Immutable Fedora (Silverblue, Kinoite, Bluefin, etc.)
+
+```bash
+sudo dnf copr enable zktaiga/fw-fanctrl
+sudo rpm-ostree install fw-fanctrl
+# Reboot to apply, or use --apply-live to avoid reboot:
+# sudo rpm-ostree install --apply-live fw-fanctrl
+```
+
+This will install `fw-fanctrl` along with its dependency `fw-ectool`.

@@ -2,14 +2,14 @@
 %global debug_package %{nil}
 
 %global reponame    fw-fanctrl
-%global commit      80ecc5d273b46f715d924c49234b6867fe3daf33
-%global commit_date 20250302
+%global commit      776f619cea2b07bf7c21cdd41e9e50297377ec3b
+%global commit_date 20250929
 %global shortcommit %(c=%{commit}; echo ${c:0:7})
 %global gitrel      .%{commit_date}.git%{shortcommit}
 
 Name:           fw-fanctrl
 Version:        0.0.0
-Release:        10%{gitrel}%{?dist}
+Release:        1%{gitrel}%{?dist}
 Summary:        Framework FanControl Software
 
 License:        BSD-3-Clause
@@ -24,8 +24,6 @@ BuildRequires:  python3dist(wheel)
 Requires:       python3
 Requires:       fw-ectool
 
-Patch0:         138-no-build.patch
-
 %description
 Framework Fan control script
 
@@ -36,15 +34,16 @@ Framework Fan control script
 %pyproject_wheel
 
 %install
+# Use pyproject_install to install the Python package
+%pyproject_install
+
+# Install systemd service and configuration files manually
 ./install.sh --no-sudo \
     --no-ectool \
     --no-pip-install \
-    --no-pip-build \
     --no-post-install \
-    --no-override-python-installation-path \
     -p %{buildroot}/usr \
     --sysconf-dir %{buildroot}/etc
-%pyproject_install
 
 %post
 %systemd_post %{name}.service

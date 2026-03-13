@@ -1,10 +1,10 @@
 %global reponame    framework-ec
-# renovate: datasource=git-refs depName=DHowett/framework-ec packageName=https://github.com/DHowett/framework-ec.git currentValue=main
 %global commit      54c140399bbc3e6a3dce6c9f842727c4128367be
 %global shortcommit %(c=%{commit}; echo ${c:0:7})
 %global gitrel      .git%{shortcommit}
 
 Name:           fw-ectool
+# renovate: datasource=github-tags depName=DHowett/framework-ec versioning=loose extractVersion=^v?(?<version>.*)$
 Version:        v0.3.3
 Release:        3%{gitrel}%{?dist}
 Summary:        A tool for interacting with the embedded controller on a Framework laptop.

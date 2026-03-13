@@ -8,7 +8,7 @@
 
 Name:           fw-fanctrl
 # renovate: datasource=github-tags depName=TamtamHero/fw-fanctrl extractVersion=^v(?<version>.*)$
-Version:        0.0.0
+Version:        1.0.4
 Release:        1%{gitrel}%{?dist}
 Summary:        Framework FanControl Software
 

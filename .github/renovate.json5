@@ -3,11 +3,12 @@
   customManagers: [
     {
       customType: 'regex',
-      description: 'Track pinned upstream git commits in RPM spec files',
+      description: 'Track upstream RPM package versions in spec files',
       managerFilePatterns: ['/\\.spec$/'],
       matchStrings: [
-        '# renovate: datasource=(?<datasource>[a-z-]+) depName=(?<depName>[^\\s]+) packageName=(?<packageName>[^\\s]+) currentValue=(?<currentValue>[^\\s]+)\\s+%global [^\\s]+\\s+(?<currentDigest>[a-f0-9]{40})',
+        '# renovate: datasource=(?<datasource>[^\\s]+) depName=(?<depName>[^\\s]+)(?: versioning=(?<versioning>[^\\s]+))?(?: extractVersion=(?<extractVersion>[^\\s]+))?\\s+Version:\\s*(?<currentValue>\\S+)',
       ],
+      versioningTemplate: '{{#if versioning}}{{{versioning}}}{{else}}semver{{/if}}',
     },
   ],
 }

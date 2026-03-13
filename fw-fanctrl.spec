@@ -2,12 +2,12 @@
 %global debug_package %{nil}
 
 %global reponame    fw-fanctrl
-# renovate: datasource=git-refs depName=TamtamHero/fw-fanctrl packageName=https://github.com/TamtamHero/fw-fanctrl.git currentValue=main
 %global commit      776f619cea2b07bf7c21cdd41e9e50297377ec3b
 %global shortcommit %(c=%{commit}; echo ${c:0:7})
 %global gitrel      .git%{shortcommit}
 
 Name:           fw-fanctrl
+# renovate: datasource=github-tags depName=TamtamHero/fw-fanctrl extractVersion=^v(?<version>.*)$
 Version:        0.0.0
 Release:        1%{gitrel}%{?dist}
 Summary:        Framework FanControl Software

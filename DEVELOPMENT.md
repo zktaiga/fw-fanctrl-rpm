@@ -176,7 +176,7 @@ rpm -qpl ~/rpmbuild/RPMS/x86_64/fw-fanctrl-*.rpm
 2. Click "New Project"
 3. Fill in:
    - **Name:** `fw-fanctrl`
-   - **Chroots:** Select Fedora versions (e.g., Fedora 42, Fedora 41)
+   - **Chroots:** Select Fedora versions (e.g., Fedora 44, Fedora 43, Fedora 42)
 4. Create project
 
 ### Adding Packages to COPR
@@ -256,7 +256,7 @@ Check:
 ### fw-fanctrl Files
 
 - `/usr/bin/fw-fanctrl` - Main fan control executable
-- `/usr/lib/python3.13/site-packages/fw_fanctrl/` - Python package
+- `/usr/lib/python3.X/site-packages/fw_fanctrl/` - Python package (path resolves via `%{python3_sitelib}`; X depends on Fedora release — e.g., 3.13 on F42, 3.14 on F44)
 - `/usr/lib/systemd/system/fw-fanctrl.service` - Systemd service
 - `/etc/fw-fanctrl/config.json` - Configuration file
 - `/etc/fw-fanctrl/config.schema.json` - JSON schema

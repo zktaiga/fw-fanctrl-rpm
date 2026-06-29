@@ -1,2 +1,2 @@
 #!/usr/bin/sh
-/usr/bin/ectool --interface=fwk $@
+exec /usr/bin/ectool --interface=fwk "$@"

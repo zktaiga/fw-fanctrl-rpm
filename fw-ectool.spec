@@ -20,6 +20,7 @@ BuildRequires:  gcc
 BuildRequires:  make
 BuildRequires:  arm-none-eabi-gcc-cs
 BuildRequires:  libftdi-devel
+BuildRequires:  systemd-rpm-macros
 Requires:       libftdi
 
 %description
@@ -36,6 +37,15 @@ install -Dm755 build/bds/util/ectool %{buildroot}%{_bindir}/ectool
 install -m755 %SOURCE1 %{buildroot}%{_bindir}/fw-ectool
 install -Dm644 %SOURCE2 %{buildroot}%{_unitdir}/framework-ectool.service
 install -Dm755 %SOURCE3 %{buildroot}%{_libexecdir}/framework-ectool
+
+%post
+%systemd_post framework-ectool.service
+
+%preun
+%systemd_preun framework-ectool.service
+
+%postun
+%systemd_postun framework-ectool.service
 
 %files
 %license LICENSE

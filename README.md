@@ -2,10 +2,11 @@
 
 COPR for Framework Fan Control utilities.
 
-| Packages   | COPR                                                                                                                                                                                                                                     |
-|------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| fw-ectool  | [![Copr build status for fw-ectool](https://copr.fedorainfracloud.org/coprs/zktaiga/fw-fanctrl/package/fw-ectool/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/zktaiga/fw-fanctrl/package/fw-ectool/)    |
-| fw-fanctrl | [![Copr build status for fw-fanctrl](https://copr.fedorainfracloud.org/coprs/zktaiga/fw-fanctrl/package/fw-fanctrl/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/zktaiga/fw-fanctrl/package/fw-fanctrl/) |
+| Packages       | COPR                                                                                                                                                                                                                                             |
+|----------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| framework-tool | [![Copr build status for framework-tool](https://copr.fedorainfracloud.org/coprs/zktaiga/fw-fanctrl/package/framework-tool/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/zktaiga/fw-fanctrl/package/framework-tool/) |
+| fw-fanctrl     | [![Copr build status for fw-fanctrl](https://copr.fedorainfracloud.org/coprs/zktaiga/fw-fanctrl/package/fw-fanctrl/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/zktaiga/fw-fanctrl/package/fw-fanctrl/)             |
+| fw-ectool      | [![Copr build status for fw-ectool](https://copr.fedorainfracloud.org/coprs/zktaiga/fw-fanctrl/package/fw-ectool/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/zktaiga/fw-fanctrl/package/fw-ectool/)                |
 
 ## Installation
 
@@ -61,7 +62,7 @@ sudo rpm-ostree install --apply-live fw-fanctrl
 sudo systemctl enable --now fw-fanctrl
 ```
 
-This will install `fw-fanctrl` along with its dependency `fw-ectool`.
+This will install `fw-fanctrl` along with its dependency `framework-tool`. `fw-ectool` is still packaged for users who need the legacy EC utility directly, but current `fw-fanctrl` releases use Framework's `framework_tool`.
 
 Commands such as `fw-fanctrl reload` require the `fw-fanctrl` service to be running first. If `reload` fails with `No such file or directory`, check the service status and logs:
 

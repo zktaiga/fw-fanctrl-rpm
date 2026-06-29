@@ -8,7 +8,7 @@ License:        BSD-3-Clause
 URL:            https://github.com/TamtamHero/%{name}
 Source0:        %{url}/archive/refs/tags/v%{version}/%{name}-%{version}.tar.gz
 
-BuildArch:      noarch
+ExclusiveArch:  x86_64
 BuildRequires:  pyproject-rpm-macros
 BuildRequires:  systemd-rpm-macros
 BuildRequires:  sed

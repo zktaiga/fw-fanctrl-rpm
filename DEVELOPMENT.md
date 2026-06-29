@@ -6,7 +6,7 @@ This document explains how to build, test, update, and maintain the RPM packages
 
 This repository contains three RPM spec files:
 
-- **framework-tool.spec** - Framework Computer's current `framework_tool` utility from `FrameworkComputer/framework-system`.
+- **framework-tool.spec** - Framework Computer's current `framework_tool` utility from `FrameworkComputer/framework-system` using the upstream Linux release binary.
 - **fw-fanctrl.spec** - Fan control service from `TamtamHero/fw-fanctrl`; depends on `framework-tool`.
 - **fw-ectool.spec** - Legacy EC utility package kept for users who need `ectool`/`fw-ectool` directly.
 
@@ -75,8 +75,8 @@ rpmbuild -ba fw-ectool.spec
 
 The RPM packages will be in:
 
-- `~/rpmbuild/RPMS/*/framework-tool-*.rpm`
-- `~/rpmbuild/RPMS/noarch/fw-fanctrl-*.rpm`
+- `~/rpmbuild/RPMS/x86_64/framework-tool-*.rpm`
+- `~/rpmbuild/RPMS/x86_64/fw-fanctrl-*.rpm`
 - `~/rpmbuild/RPMS/*/fw-ectool-*.rpm`
 - `~/rpmbuild/SRPMS/*.src.rpm`
 
@@ -85,7 +85,7 @@ The RPM packages will be in:
 ### Regular Fedora Systems
 
 ```bash
-sudo dnf install ~/rpmbuild/RPMS/*/framework-tool-*.rpm ~/rpmbuild/RPMS/noarch/fw-fanctrl-*.rpm
+sudo dnf install ~/rpmbuild/RPMS/x86_64/framework-tool-*.rpm ~/rpmbuild/RPMS/x86_64/fw-fanctrl-*.rpm
 sudo systemctl enable --now fw-fanctrl
 ```
 
@@ -134,6 +134,8 @@ Version updates are Renovate-managed. Specs use tag-based source URLs so Renovat
 
 No local patch to `install.sh` is carried. The spec installs Python files, configuration, and systemd units directly using RPM-native steps.
 
+`framework-tool` currently packages the upstream Linux release binary and verifies its SHA-256 during `%install`. A source build was preferred, but Fedora/COPR cannot currently resolve all required Rust crates from packaged dependencies.
+
 ### Updating fw-ectool
 
 `fw-ectool` still tracks a specific framework-ec commit because upstream does not publish version tags for this use case.
@@ -171,7 +173,7 @@ After building, inspect package contents:
 
 ```bash
 rpm -qpl ~/rpmbuild/RPMS/*/framework-tool-*.rpm
-rpm -qpl ~/rpmbuild/RPMS/noarch/fw-fanctrl-*.rpm
+rpm -qpl ~/rpmbuild/RPMS/x86_64/fw-fanctrl-*.rpm
 rpm -qpl ~/rpmbuild/RPMS/*/fw-ectool-*.rpm
 ```
 
@@ -181,8 +183,8 @@ rpm -qpl ~/rpmbuild/RPMS/*/fw-ectool-*.rpm
 
 Configure these COPR packages as SCM builds from this repository:
 
-1. `framework-tool` using `framework-tool.spec`
-2. `fw-fanctrl` using `fw-fanctrl.spec`
+1. `framework-tool` using `framework-tool.spec` on x86_64 chroots
+2. `fw-fanctrl` using `fw-fanctrl.spec` on x86_64 chroots
 3. `fw-ectool` using `fw-ectool.spec` if you still want to publish the legacy helper
 
 For `fw-fanctrl`, add the COPR repository itself as a build dependency so COPR can resolve `framework-tool`.

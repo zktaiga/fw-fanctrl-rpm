@@ -13,6 +13,6 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install RPM tooling
         run: |
-          dnf install -y make rpm-build rpmlint cargo-rpm-macros pyproject-rpm-macros systemd-rpm-macros
+          dnf install -y make rpm-build rpmlint pyproject-rpm-macros systemd-rpm-macros
       - name: Check specs
         run: make check

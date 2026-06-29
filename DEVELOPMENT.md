@@ -1,32 +1,33 @@
 # Development Guide
 
-This document explains how to build, test, update, and maintain the fw-fanctrl RPM packages.
+This document explains how to build, test, update, and maintain the RPM packages in this repository.
 
 ## Repository Structure
 
-This repository contains two separate RPM spec files:
+This repository contains three RPM spec files:
 
-- **fw-ectool.spec** - EC tool for Framework laptops (dependency)
-- **fw-fanctrl.spec** - Fan control software (main package)
+- **framework-tool.spec** - Framework Computer's current `framework_tool` utility from `FrameworkComputer/framework-system`.
+- **fw-fanctrl.spec** - Fan control service from `TamtamHero/fw-fanctrl`; depends on `framework-tool`.
+- **fw-ectool.spec** - Legacy EC utility package kept for users who need `ectool`/`fw-ectool` directly.
 
-Both packages are built separately but `fw-fanctrl` requires `fw-ectool` to be installed.
+Current `fw-fanctrl` releases use `framework_tool`, not `fw-ectool`.
 
 ## Prerequisites
 
-### For Building on Fedora/RHEL-based Systems
+### Fedora/RHEL-based Systems
 
 ```bash
-sudo dnf install rpm-build rpmdevtools
+sudo dnf install rpm-build rpmdevtools rpmlint dnf-plugins-core
 ```
 
-### For Building on Immutable Systems (Bluefin, Silverblue, etc.)
+### Immutable Systems (Bluefin, Silverblue, etc.)
 
 Use a toolbox container:
 
 ```bash
 toolbox create rpm-build
 toolbox enter rpm-build
-sudo dnf install rpm-build rpmdevtools
+sudo dnf install rpm-build rpmdevtools rpmlint dnf-plugins-core
 ```
 
 ## Building Locally
@@ -40,245 +41,218 @@ rpmdev-setuptree
 ### 2. Install Build Dependencies
 
 ```bash
-sudo dnf builddep fw-ectool.spec
+sudo dnf builddep framework-tool.spec
 sudo dnf builddep fw-fanctrl.spec
+sudo dnf builddep fw-ectool.spec
 ```
 
 ### 3. Download Sources
 
 ```bash
-spectool -g -R fw-ectool.spec
+spectool -g -R framework-tool.spec
 spectool -g -R fw-fanctrl.spec
+spectool -g -R fw-ectool.spec
 
-# Copy additional source files
+# Additional local sources for fw-ectool only
 cp fw-ectool.sh framework-ectool.service framework-ectool.sh ~/rpmbuild/SOURCES/
-cp 138-no-build.patch ~/rpmbuild/SOURCES/
 ```
 
-### 4. Build Packages (in order)
+### 4. Build Packages
 
-**Important:** Build fw-ectool first, as fw-fanctrl depends on it.
+Build dependency order:
 
 ```bash
-# Build fw-ectool
-rpmbuild -ba fw-ectool.spec
-
-# Install fw-ectool (needed for fw-fanctrl build)
-sudo dnf install ~/rpmbuild/RPMS/x86_64/fw-ectool-*.rpm
-
-# Build fw-fanctrl
+# fw-fanctrl depends on framework-tool
+rpmbuild -ba framework-tool.spec
+sudo dnf install ~/rpmbuild/RPMS/*/framework-tool-*.rpm
 rpmbuild -ba fw-fanctrl.spec
+
+# fw-ectool is independent/legacy
+rpmbuild -ba fw-ectool.spec
 ```
 
 ### 5. Built Packages Location
 
 The RPM packages will be in:
-- `~/rpmbuild/RPMS/x86_64/fw-ectool-*.rpm`
-- `~/rpmbuild/RPMS/x86_64/fw-fanctrl-*.rpm`
-- `~/rpmbuild/SRPMS/*.src.rpm` (source RPMs)
+
+- `~/rpmbuild/RPMS/*/framework-tool-*.rpm`
+- `~/rpmbuild/RPMS/noarch/fw-fanctrl-*.rpm`
+- `~/rpmbuild/RPMS/*/fw-ectool-*.rpm`
+- `~/rpmbuild/SRPMS/*.src.rpm`
 
 ## Installing Locally Built Packages
 
-### On Regular Fedora Systems
+### Regular Fedora Systems
 
 ```bash
-sudo dnf install ~/rpmbuild/RPMS/x86_64/fw-ectool-*.rpm ~/rpmbuild/RPMS/x86_64/fw-fanctrl-*.rpm
+sudo dnf install ~/rpmbuild/RPMS/*/framework-tool-*.rpm ~/rpmbuild/RPMS/noarch/fw-fanctrl-*.rpm
+sudo systemctl enable --now fw-fanctrl
 ```
 
-### On Immutable Systems (Bluefin, Silverblue)
+### Immutable Systems (Bluefin, Silverblue)
 
 ```bash
-# Copy from toolbox to host (if built in toolbox)
-toolbox run -c rpm-build cp ~/rpmbuild/RPMS/x86_64/*.rpm ~/fw-fanctrl-rpm/
+# Copy from toolbox to host if built in toolbox
+toolbox run -c rpm-build cp ~/rpmbuild/RPMS/*/*.rpm ~/fw-fanctrl-rpm/
 
 # Install with rpm-ostree
-rpm-ostree install ./fw-ectool-*.rpm ./fw-fanctrl-*.rpm
-
-# Reboot to apply
+rpm-ostree install ./framework-tool-*.rpm ./fw-fanctrl-*.rpm
 systemctl reboot
+```
+
+After reboot:
+
+```bash
+sudo systemctl enable --now fw-fanctrl
 ```
 
 ## Updating Package Versions
 
-### Updating fw-ectool
+Version updates are Renovate-managed. Specs use tag-based source URLs so Renovate only needs to update `Version:`.
 
-1. Find the new commit hash from https://github.com/DHowett/framework-ec
+### Updating framework-tool
 
-2. Edit `fw-ectool.spec`:
+1. Find the new tag at <https://github.com/FrameworkComputer/framework-system/releases>.
+2. Edit `framework-tool.spec`:
+
    ```spec
-   %global commit      NEW_COMMIT_HASH_HERE
-   %global commit_date YYYYMMDD
+   Version:        X.Y.Z
    ```
 
-3. Update version/release if needed:
-   ```spec
-   Version:        vX.Y.Z
-   Release:        1%{gitrel}%{?dist}
-   ```
-
-4. Build and test
+3. Build and test.
 
 ### Updating fw-fanctrl
 
-1. Find the new commit hash from https://github.com/TamtamHero/fw-fanctrl
-
+1. Find the new tag at <https://github.com/TamtamHero/fw-fanctrl/releases>.
 2. Edit `fw-fanctrl.spec`:
-   ```spec
-   %global commit      NEW_COMMIT_HASH_HERE
-   %global commit_date YYYYMMDD
-   ```
 
-3. Update version/release if needed:
    ```spec
    Version:        X.Y.Z
-   Release:        1%{gitrel}%{?dist}
    ```
 
-4. If fw-ectool version changed, update the dependency:
+3. Build and test.
+
+No local patch to `install.sh` is carried. The spec installs Python files, configuration, and systemd units directly using RPM-native steps.
+
+### Updating fw-ectool
+
+`fw-ectool` still tracks a specific framework-ec commit because upstream does not publish version tags for this use case.
+
+1. Find the desired commit from <https://github.com/DHowett/framework-ec>.
+2. Edit `fw-ectool.spec`:
+
    ```spec
-   Requires:       fw-ectool
+   %global commit      NEW_COMMIT_HASH_HERE
+   Version:            vX.Y.Z
+   Release:            1%{gitrel}%{?dist}
    ```
 
-5. Build and test
+3. Build and test.
 
 ## Testing Spec Files
 
-### Validate Spec Syntax
+Run the repository check target:
 
 ```bash
-rpmspec -q fw-ectool.spec
+make check
+```
+
+Equivalent manual commands:
+
+```bash
+rpmspec -q framework-tool.spec
 rpmspec -q fw-fanctrl.spec
+rpmspec -q fw-ectool.spec
+
+rpmlint framework-tool.spec fw-fanctrl.spec fw-ectool.spec
 ```
 
-This will show what packages will be produced.
-
-### Check for Build Issues
+After building, inspect package contents:
 
 ```bash
-rpmlint fw-ectool.spec
-rpmlint fw-fanctrl.spec
-```
-
-### Test Installation
-
-After building, test the RPMs:
-
-```bash
-rpm -qpl ~/rpmbuild/RPMS/x86_64/fw-ectool-*.rpm  # List files
-rpm -qpl ~/rpmbuild/RPMS/x86_64/fw-fanctrl-*.rpm
+rpm -qpl ~/rpmbuild/RPMS/*/framework-tool-*.rpm
+rpm -qpl ~/rpmbuild/RPMS/noarch/fw-fanctrl-*.rpm
+rpm -qpl ~/rpmbuild/RPMS/*/fw-ectool-*.rpm
 ```
 
 ## Publishing to COPR
 
-### Setting Up a New COPR Repository
+### Package Setup
 
-1. Go to https://copr.fedorainfracloud.org/
-2. Click "New Project"
-3. Fill in:
-   - **Name:** `fw-fanctrl`
-   - **Chroots:** Select Fedora versions (e.g., Fedora 44, Fedora 43, Fedora 42)
-4. Create project
+Configure these COPR packages as SCM builds from this repository:
 
-### Adding Packages to COPR
+1. `framework-tool` using `framework-tool.spec`
+2. `fw-fanctrl` using `fw-fanctrl.spec`
+3. `fw-ectool` using `fw-ectool.spec` if you still want to publish the legacy helper
 
-#### Add fw-ectool Package
+For `fw-fanctrl`, add the COPR repository itself as a build dependency so COPR can resolve `framework-tool`.
 
-1. In your COPR project, click "Packages" → "Add Package"
-2. Select "SCM" type
-3. Fill in:
-   - **Package name:** `fw-ectool`
-   - **Clone URL:** `https://github.com/YOUR_USERNAME/fw-fanctrl-rpm.git`
-   - **Spec file:** `fw-ectool.spec`
-4. Save
+### Build Order
 
-#### Add fw-fanctrl Package
-
-1. Click "Add Package" again
-2. Select "SCM" type
-3. Fill in:
-   - **Package name:** `fw-fanctrl`
-   - **Clone URL:** `https://github.com/YOUR_USERNAME/fw-fanctrl-rpm.git`
-   - **Spec file:** `fw-fanctrl.spec`
-4. **Important:** In "Edit" → "Build Dependencies" → Add your COPR repo (so it can find fw-ectool)
-5. Save
-
-### Building in COPR
-
-**Build order matters:**
-
-1. Build `fw-ectool` first
-2. Wait for it to complete successfully
-3. Then build `fw-fanctrl`
-
-To rebuild after updates:
-```bash
-# Using copr-cli (if installed)
-copr-cli build YOUR_USERNAME/fw-fanctrl --scm --clone-url https://github.com/YOUR_USERNAME/fw-fanctrl-rpm.git --spec fw-ectool.spec
-copr-cli build YOUR_USERNAME/fw-fanctrl --scm --clone-url https://github.com/YOUR_USERNAME/fw-fanctrl-rpm.git --spec fw-fanctrl.spec
+```text
+framework-tool -> fw-fanctrl
+fw-ectool can build independently
 ```
 
-Or use the web interface to trigger builds.
+Example with `copr-cli`:
+
+```bash
+copr-cli build YOUR_USERNAME/fw-fanctrl --scm --clone-url https://github.com/YOUR_USERNAME/fw-fanctrl-rpm.git --spec framework-tool.spec
+copr-cli build YOUR_USERNAME/fw-fanctrl --scm --clone-url https://github.com/YOUR_USERNAME/fw-fanctrl-rpm.git --spec fw-fanctrl.spec
+copr-cli build YOUR_USERNAME/fw-fanctrl --scm --clone-url https://github.com/YOUR_USERNAME/fw-fanctrl-rpm.git --spec fw-ectool.spec
+```
 
 ## Troubleshooting
 
-### Build Fails: "Cannot read patch file"
+### fw-fanctrl Build Fails: "framework-tool not found"
 
-Make sure all source files are copied to `~/rpmbuild/SOURCES/`:
-```bash
-cp 138-no-build.patch fw-ectool.sh framework-ectool.service framework-ectool.sh ~/rpmbuild/SOURCES/
-```
-
-### fw-fanctrl Build Fails: "fw-ectool not found"
-
-Build and install fw-ectool first:
-```bash
-rpmbuild -ba fw-ectool.spec
-sudo dnf install ~/rpmbuild/RPMS/x86_64/fw-ectool-*.rpm
-```
+Build and publish/install `framework-tool` first, then rebuild `fw-fanctrl`.
 
 ### COPR Build Fails
 
 Check:
-1. Both packages are configured in COPR
-2. Build order (fw-ectool before fw-fanctrl)
-3. COPR repo is added as build dependency for fw-fanctrl
-4. Spec files are valid (`rpmspec -q` test)
+
+1. `framework-tool` and `fw-fanctrl` are both configured in COPR.
+2. `framework-tool` builds before `fw-fanctrl`.
+3. The COPR repo is added as a build dependency for `fw-fanctrl`.
+4. Spec files pass `make check` locally.
 
 ## Package Information
 
-### fw-ectool Files
+### framework-tool Files
 
-- `/usr/bin/ectool` - EC tool binary
-- `/usr/bin/fw-ectool` - Wrapper script
-- `/usr/lib/systemd/system/framework-ectool.service` - Systemd service
-- `/usr/libexec/framework-ectool` - Helper script
+- `/usr/bin/framework_tool` - Framework Computer utility used by `fw-fanctrl`.
+- Shell completions for bash, zsh, and fish.
 
 ### fw-fanctrl Files
 
-- `/usr/bin/fw-fanctrl` - Main fan control executable
-- `/usr/lib/python3.X/site-packages/fw_fanctrl/` - Python package (path resolves via `%{python3_sitelib}`; X depends on Fedora release — e.g., 3.13 on F42, 3.14 on F44)
-- `/usr/lib/systemd/system/fw-fanctrl.service` - Systemd service
-- `/etc/fw-fanctrl/config.json` - Configuration file
-- `/etc/fw-fanctrl/config.schema.json` - JSON schema
-- `/usr/lib/systemd/system-sleep/fw-fanctrl-suspend` - Suspend hook
+- `/usr/bin/fw-fanctrl` - Main fan control executable.
+- `/usr/lib/python3.X/site-packages/fw_fanctrl/` - Python package.
+- `/usr/lib/systemd/system/fw-fanctrl.service` - Main service.
+- `/usr/lib/systemd/system/fw-fanctrl-suspend.service` - Sleep hook service.
+- `/etc/fw-fanctrl/config.json` - Configuration file.
+- `/etc/fw-fanctrl/config.schema.json` - JSON schema.
+
+### fw-ectool Files
+
+- `/usr/bin/ectool` - Legacy EC utility binary.
+- `/usr/bin/fw-ectool` - Wrapper script.
+- `/usr/lib/systemd/system/framework-ectool.service` - Optional systemd service.
+- `/usr/libexec/framework-ectool` - Helper script.
 
 ## Version Bumping Checklist
 
-When updating versions:
-
-- [ ] Update `%global commit` hash
-- [ ] Update `%global commit_date`
-- [ ] Update `Version:` if upstream version changed
-- [ ] Update `Release:` (reset to 1 on version bump, increment on packaging changes)
-- [ ] Test build locally
-- [ ] Verify spec with `rpmspec -q`
-- [ ] Test installation
-- [ ] Update COPR builds
-- [ ] Tag release in git (optional): `git tag vX.Y.Z && git push --tags`
+- [ ] Update `Version:` in the relevant spec, or review Renovate's PR.
+- [ ] Test with `make check`.
+- [ ] Build locally or in COPR.
+- [ ] For `fw-fanctrl`, confirm `framework-tool` is available first.
+- [ ] Update COPR builds.
 
 ## References
 
 - [Fedora RPM Packaging Guidelines](https://docs.fedoraproject.org/en-US/packaging-guidelines/)
+- [Fedora Rust Packaging Guidelines](https://docs.fedoraproject.org/en-US/packaging-guidelines/Rust/)
 - [COPR Documentation](https://docs.pagure.org/copr.copr/)
 - [fw-fanctrl upstream](https://github.com/TamtamHero/fw-fanctrl)
+- [framework-system upstream](https://github.com/FrameworkComputer/framework-system)
 - [framework-ec upstream](https://github.com/DHowett/framework-ec)

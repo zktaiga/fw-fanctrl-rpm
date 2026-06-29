@@ -1,70 +1,66 @@
-%global jobid 899
-%global debug_package %{nil}
-
-%global reponame    fw-fanctrl
-%global commit      776f619cea2b07bf7c21cdd41e9e50297377ec3b
-%global shortcommit %(c=%{commit}; echo ${c:0:7})
-%global gitrel      .git%{shortcommit}
-
 Name:           fw-fanctrl
 # renovate: datasource=github-tags depName=TamtamHero/fw-fanctrl extractVersion=^v(?<version>.*)$
-Version:        1.0.4
-Release:        1%{gitrel}%{?dist}
+Version:        1.1.0
+Release:        1%{?dist}
 Summary:        Framework FanControl Software
 
 License:        BSD-3-Clause
 URL:            https://github.com/TamtamHero/%{name}
-Source0:        https://github.com/TamtamHero/%{name}/archive/%{commit}.tar.gz
+Source0:        %{url}/archive/refs/tags/v%{version}/%{name}-%{version}.tar.gz
 
+BuildArch:      noarch
+BuildRequires:  pyproject-rpm-macros
 BuildRequires:  systemd-rpm-macros
-BuildRequires:  python3-devel
-BuildRequires:  python3-pip
-BuildRequires:  python3dist(setuptools)
-BuildRequires:  python3dist(wheel)
-BuildRequires:  python3dist(build)
-Requires:       python3
-Requires:       fw-ectool
+BuildRequires:  sed
 
-Patch0:         rpm-packaging.patch
+Requires:       framework-tool
 
 %description
-Framework Fan control script
+Framework fan control service using Framework Computer's framework_tool.
 
 %prep
-%autosetup -n %{name}-%{commit}
+%autosetup -n %{name}-%{version}
+
+%generate_buildrequires
+%pyproject_buildrequires
 
 %build
 %pyproject_wheel
 
 %install
-./install.sh --no-sudo \
-    --no-ectool \
-    --no-pip-install \
-    --no-pip-build \
-    --no-post-install \
-    --effective-installation-dir %{_bindir} \
-    --dest-dir %{buildroot} \
-    --prefix-dir /usr \
-    --sysconf-dir /etc
 %pyproject_install
 
+install -Dm644 src/fw_fanctrl/_resources/config.json \
+    %{buildroot}%{_sysconfdir}/%{name}/config.json
+install -Dm644 src/fw_fanctrl/_resources/config.schema.json \
+    %{buildroot}%{_sysconfdir}/%{name}/config.schema.json
+
+install -d %{buildroot}%{_unitdir}
+for service in services/*.service; do
+    service_name="$(basename "${service}")"
+    sed \
+        -e 's|"%PYTHON_SCRIPT_INSTALLATION_PATH%"|%{_bindir}/fw-fanctrl|g' \
+        -e 's|%SYSCONF_DIRECTORY%|%{_sysconfdir}|g' \
+        "${service}" > "%{buildroot}%{_unitdir}/${service_name}"
+done
+
 %post
-%systemd_post %{name}.service
+%systemd_post %{name}.service %{name}-suspend.service
 
 %preun
-%systemd_preun %{name}.service
+%systemd_preun %{name}.service %{name}-suspend.service
 
 %postun
-%systemd_postun %{name}.service
+%systemd_postun %{name}.service %{name}-suspend.service
 
 %files
 %license LICENSE
 %{_bindir}/%{name}
 %{python3_sitelib}/fw_fanctrl*
 %{_unitdir}/%{name}.service
+%{_unitdir}/%{name}-suspend.service
 %config(noreplace) %{_sysconfdir}/%{name}/config.json
 %{_sysconfdir}/%{name}/config.schema.json
-%{_prefix}/lib/systemd/system-sleep/%{name}-suspend
 
 %changelog
 %autochangelog

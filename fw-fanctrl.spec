@@ -1,7 +1,9 @@
+%global debug_package %{nil}
+
 Name:           fw-fanctrl
 # renovate: datasource=github-tags depName=TamtamHero/fw-fanctrl extractVersion=^v(?<version>.*)$
 Version:        1.1.0
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Framework FanControl Software
 
 License:        BSD-3-Clause

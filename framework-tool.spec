@@ -3,7 +3,7 @@
 
 Name:           framework-tool
 # renovate: datasource=github-tags depName=FrameworkComputer/framework-system extractVersion=^v(?<version>.*)$
-Version:        0.6.4
+Version:        0.6.5
 Release:        2%{?dist}
 Summary:        Tool to control Framework Computer systems
 

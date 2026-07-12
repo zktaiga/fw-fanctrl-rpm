@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     container: fedora:latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install RPM tooling
         run: |
           dnf install -y make rpm-build rpmlint pyproject-rpm-macros systemd-rpm-macros

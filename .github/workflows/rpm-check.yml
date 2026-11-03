@@ -5,14 +5,30 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: read
+
 jobs:
   spec-check:
     runs-on: ubuntu-latest
-    container: fedora:latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        fedora: ['43', '44']
+    container: fedora:${{ matrix.fedora }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Install RPM tooling
         run: |
-          dnf install -y make rpm-build rpmlint pyproject-rpm-macros systemd-rpm-macros
+          dnf install -y make rpm-build rpmdevtools rpmlint pyproject-rpm-macros systemd-rpm-macros
       - name: Check specs
         run: make check
+      - name: Build framework-tool RPM and SRPM
+        run: make build-framework-tool RPM_TOPDIR="$RUNNER_TEMP/rpmbuild"
+      - name: Install and smoke-test framework-tool
+        run: |
+          dnf install -y "$RUNNER_TEMP"/rpmbuild/RPMS/x86_64/framework-tool-*.rpm
+          framework_tool --version

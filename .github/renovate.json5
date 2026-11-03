@@ -1,5 +1,5 @@
 {
-  extends: ['config:recommended'],
+  extends: ['config:recommended', 'helpers:pinGitHubActionDigests'],
   customManagers: [
     {
       customType: 'regex',
@@ -9,6 +9,18 @@
         '# renovate: datasource=(?<datasource>[^\\s]+) depName=(?<depName>[^\\s]+)(?: versioning=(?<versioning>[^\\s]+))?(?: extractVersion=(?<extractVersion>[^\\s]+))?\\s+Version:\\s*(?<currentValue>\\S+)',
       ],
       versioningTemplate: '{{#if versioning}}{{{versioning}}}{{else}}semver{{/if}}',
+    },
+    {
+      customType: 'regex',
+      description: 'Update framework-tool version and release binary checksum together',
+      managerFilePatterns: ['/^framework-tool\\.spec$/'],
+      matchStrings: [
+        '%global tool_tag (?<currentValue>v\\d+\\.\\d+\\.\\d+)\\n%global tool_sha256 (?<currentDigest>[a-f0-9]{64})',
+      ],
+      datasourceTemplate: 'github-release-attachments',
+      depNameTemplate: 'FrameworkComputer/framework-system',
+      versioningTemplate: 'semver',
+      autoReplaceStringTemplate: '%global tool_tag {{{newValue}}}\n%global tool_sha256 {{{newDigest}}}',
     },
   ],
 }

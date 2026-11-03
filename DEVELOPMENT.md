@@ -108,18 +108,34 @@ sudo systemctl enable --now fw-fanctrl
 
 ## Updating Package Versions
 
-Version updates are Renovate-managed. Specs use tag-based source URLs so Renovate only needs to update `Version:`.
+Version updates are Renovate-managed. For `framework-tool`, a dedicated
+`github-release-attachments` manager updates `tool_tag` and `tool_sha256`
+together, identifying the Linux release asset by its existing digest. RPM's
+`Version:` is derived from `tool_tag` by removing the leading `v`. The generic
+version-only manager continues to track `fw-fanctrl` separately. GitHub Actions
+are SHA-pinned and Renovate maintains their version/digest updates.
 
 ### Updating framework-tool
 
 1. Find the new tag at <https://github.com/FrameworkComputer/framework-system/releases>.
-2. Edit `framework-tool.spec`:
+2. Review Renovate's tag/checksum update, or edit both values in
+   `framework-tool.spec` manually:
 
    ```spec
-   Version:        X.Y.Z
+   %global tool_tag vX.Y.Z
+   %global tool_sha256 SHA256_OF_THE_LINUX_RELEASE_ASSET
    ```
 
-3. Build and test.
+3. Download the Linux `framework_tool` asset from that exact tag, calculate its
+   SHA-256, and update `%global tool_sha256` in the spec. Where upstream provides
+   an independently published checksum or signature, verify it too. A locally
+   calculated digest pins the downloaded bytes; it is not signature verification.
+   Keep `tool_tag` and `tool_sha256` adjacent so Renovate can update them atomically.
+4. Reset `Release:` to `1%{?dist}` for a new upstream version; increment it for
+   packaging-only changes to an already published version.
+5. Run `make check` and `make build-framework-tool`. Review the RPM contents and
+   install/smoke-test the resulting package before merging. Do not remove or
+   bypass the checksum check to make a Renovate update pass.
 
 ### Updating fw-fanctrl
 
@@ -134,7 +150,7 @@ Version updates are Renovate-managed. Specs use tag-based source URLs so Renovat
 
 No local patch to `install.sh` is carried. The spec installs Python files, configuration, and systemd units directly using RPM-native steps.
 
-`framework-tool` currently packages the upstream Linux release binary and verifies its SHA-256 during `%install`. A source build was preferred, but Fedora/COPR cannot currently resolve all required Rust crates from packaged dependencies.
+`framework-tool` currently packages the upstream Linux release binary and verifies its SHA-256 during `%prep`, before extracting or installing files. A source build was preferred, but Fedora/COPR cannot currently resolve all required Rust crates from packaged dependencies.
 
 ### Updating fw-ectool
 
@@ -177,6 +193,24 @@ rpm -qpl ~/rpmbuild/RPMS/x86_64/fw-fanctrl-*.rpm
 rpm -qpl ~/rpmbuild/RPMS/*/fw-ectool-*.rpm
 ```
 
+### Full framework-tool build
+
+Spec parsing and linting do not download sources or execute the checksum and
+installation steps. Run the same full build used by CI:
+
+```bash
+make build-framework-tool
+rpm -qpl .build/framework-tool/RPMS/x86_64/framework-tool-*.rpm
+sudo dnf install .build/framework-tool/RPMS/x86_64/framework-tool-*.rpm
+framework_tool --version
+```
+
+The target uses an isolated, git-ignored `.build/framework-tool` RPM tree. Set
+`RPM_TOPDIR` to an absolute path to override it. Install `make`, `rpm-build`,
+`rpmdevtools`, and the spec's build dependencies first. CI runs `make check`,
+builds both the RPM and SRPM, and installs/smoke-tests the binary on Fedora 43
+and 44, matching the COPR chroots. Keep the CI matrix aligned with COPR.
+
 ## Publishing to COPR
 
 ### Package Setup
@@ -217,13 +251,16 @@ Check:
 1. `framework-tool` and `fw-fanctrl` are both configured in COPR.
 2. `framework-tool` builds before `fw-fanctrl`.
 3. The COPR repo is added as a build dependency for `fw-fanctrl`.
-4. Spec files pass `make check` locally.
+4. Spec files pass `make check` locally and `make build-framework-tool` succeeds.
+5. For a `framework-tool` version bump, `tool_sha256` matches the new tag's Linux
+   release binary. A checksum failure is intentional; review and update the pin.
 
 ## Package Information
 
 ### framework-tool Files
 
 - `/usr/bin/framework_tool` - Framework Computer utility used by `fw-fanctrl`.
+- `framework_tool(1)` - Upstream manual page.
 - Shell completions for bash, zsh, and fish.
 
 ### fw-fanctrl Files
@@ -244,8 +281,11 @@ Check:
 
 ## Version Bumping Checklist
 
-- [ ] Update `Version:` in the relevant spec, or review Renovate's PR.
+- [ ] Update `Version:` (`tool_tag` for `framework-tool`), or review Renovate's PR.
+- [ ] For `framework-tool`, review/update `tool_sha256` for the exact release asset.
+- [ ] Reset `Release:` for a new upstream version, or increment it for a packaging-only change.
 - [ ] Test with `make check`.
+- [ ] For `framework-tool`, run `make build-framework-tool` and install/smoke-test the RPM.
 - [ ] Build locally or in COPR.
 - [ ] For `fw-fanctrl`, confirm `framework-tool` is available first.
 - [ ] Update COPR builds.

@@ -1,10 +1,11 @@
 %global debug_package %{nil}
-%global tool_sha256 83b04df1fbd950c88bb569e91503cbf7a616663ad7ff6cbcb0e99a67509a8584
+# Renovate updates this release tag and binary checksum together.
+%global tool_tag v0.6.6
+%global tool_sha256 ebc2f3ca300dac6f484c02d058833372ff8dd3c23f2a74b63c774f8dc2f86171
 
 Name:           framework-tool
-# renovate: datasource=github-tags depName=FrameworkComputer/framework-system extractVersion=^v(?<version>.*)$
-Version:        0.6.4
-Release:        2%{?dist}
+Version:        %{sub %{tool_tag} 2}
+Release:        1%{?dist}
 Summary:        Tool to control Framework Computer systems
 
 License:        BSD-3-Clause
@@ -23,16 +24,18 @@ controlling Framework systems, including embedded-controller fan behavior used
 by fw-fanctrl.
 
 %prep
+echo "%{tool_sha256}  %{SOURCE1}" | sha256sum --check
 %autosetup -n framework-system-%{version}
 
 %build
 # Upstream publishes the Linux framework_tool release binary. Building from
 # source in Fedora/COPR currently requires several Rust crates that are not
-# packaged for Fedora, so this RPM repackages the signed release asset instead.
+# packaged for Fedora, so this RPM repackages the checksum-pinned release asset.
 
 %install
-echo "%{tool_sha256}  %{SOURCE1}" | sha256sum --check
 install -Dm755 %{SOURCE1} %{buildroot}%{_bindir}/framework_tool
+install -Dm644 framework_tool/framework_tool.1 \
+    %{buildroot}%{_mandir}/man1/framework_tool.1
 install -Dm644 framework_tool/completions/bash/framework_tool \
     %{buildroot}%{_datadir}/bash-completion/completions/framework_tool
 install -Dm644 framework_tool/completions/zsh/_framework_tool \
@@ -44,6 +47,7 @@ install -Dm644 framework_tool/completions/fish/framework_tool.fish \
 %license LICENSE.md
 %doc README.md EXAMPLES.md EXAMPLES_ADVANCED.md
 %{_bindir}/framework_tool
+%{_mandir}/man1/framework_tool.1*
 %{_datadir}/bash-completion/completions/framework_tool
 %{_datadir}/zsh/site-functions/_framework_tool
 %{_datadir}/fish/vendor_completions.d/framework_tool.fish

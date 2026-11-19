@@ -154,7 +154,7 @@ No local patch to `install.sh` is carried. The spec installs Python files, confi
 
 ### Updating fw-ectool
 
-`fw-ectool` still tracks a specific framework-ec commit because upstream does not publish version tags for this use case.
+`fw-ectool` still tracks a specific framework-ec commit because upstream does not publish version tags for this use case. It is intentionally excluded from version-only Renovate updates: changing `Version:` alone would not update the source commit or the packaged code.
 
 1. Find the desired commit from <https://github.com/DHowett/framework-ec>.
 2. Edit `fw-ectool.spec`:

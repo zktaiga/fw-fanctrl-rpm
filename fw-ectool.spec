@@ -4,7 +4,8 @@
 %global gitrel      .git%{shortcommit}
 
 Name:           fw-ectool
-# renovate: datasource=github-tags depName=DHowett/framework-ec versioning=loose extractVersion=^v?(?<version>.*)$
+# Legacy snapshot: update the source commit and version together after testing.
+# Upstream does not publish tags, so version-only Renovate updates are unsafe.
 Version:        v0.3.3
 Release:        3%{gitrel}%{?dist}
 Summary:        A tool for interacting with the embedded controller on a Framework laptop.

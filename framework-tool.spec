@@ -1,7 +1,7 @@
 %global debug_package %{nil}
 # Renovate updates this release tag and binary checksum together.
-%global tool_tag v0.6.6
-%global tool_sha256 ebc2f3ca300dac6f484c02d058833372ff8dd3c23f2a74b63c774f8dc2f86171
+%global tool_tag v0.6.7
+%global tool_sha256 a58872c6a2c54e79cd3e95bc4a05c8a752437620a79cd19829d138f44c1f482d
 
 Name:           framework-tool
 Version:        %{sub %{tool_tag} 2}
